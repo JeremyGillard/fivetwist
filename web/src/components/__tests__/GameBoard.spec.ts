@@ -11,10 +11,15 @@ function boardWith(marbles: Record<number, Color>): Cell[] {
   return Array.from({ length: 36 }, (_, index) => marbles[index] ?? 0)
 }
 
-function mountBoard(marbles: Record<number, Color>, mode: QuadrantMode = 'idle') {
+function mountBoard(
+  marbles: Record<number, Color>,
+  mode: QuadrantMode = 'idle',
+  winning: number[] = [],
+) {
   return mount(GameBoard, {
     props: {
       cells: boardWith(marbles),
+      winning,
       mode,
       current: SIDES[Color.White],
       selected: null,
@@ -95,5 +100,28 @@ describe('GameBoard', () => {
       expect(wrapper.findAll('.quadrant--selected')).toHaveLength(1)
       expect(wrapper.findAll('[aria-pressed="true"]')).toHaveLength(1)
     })
+  })
+
+  it('rings the marbles of the winning line and fades the others', () => {
+    const line = { 0: Color.White, 1: Color.White, 2: Color.White, 3: Color.White, 4: Color.White }
+    const wrapper = mountBoard(
+      { ...line, 30: Color.Black, 20: Color.White },
+      'idle',
+      [0, 1, 2, 3, 4],
+    )
+
+    expect(wrapper.findAll('.marble--winning')).toHaveLength(5)
+    expect(wrapper.findAll('.marble--faded')).toHaveLength(2)
+    const holes = wrapper.findAll('.hole')
+    expect(holes[0]!.attributes('aria-label')).toBe('Row 1, column 1: Bone, in the winning line')
+    // Index 30 is row 5, column 0: bottom-left quadrant, last row, first hole.
+    expect(wrapper.find('[aria-label="Row 6, column 1: Amber"]').exists()).toBe(true)
+  })
+
+  it('fades nothing while nobody has won', () => {
+    const wrapper = mountBoard({ 0: Color.White, 30: Color.Black })
+
+    expect(wrapper.findAll('.marble--winning')).toHaveLength(0)
+    expect(wrapper.findAll('.marble--faded')).toHaveLength(0)
   })
 })

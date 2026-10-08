@@ -18,6 +18,7 @@ describe('useGame', () => {
     expect(snapshot.value.current).toBe(Color.White)
     expect(snapshot.value.phase).toBe(Phase.Placement)
     expect(snapshot.value.outcome).toBeUndefined()
+    expect(snapshot.value.winning).toEqual([])
     expect(placed.value).toEqual({ [Color.White]: 0, [Color.Black]: 0 })
     expect(error.value).toBeNull()
   })
@@ -81,6 +82,7 @@ describe('useGame', () => {
 
     expect(game.snapshot.value.phase).toBe(Phase.Over)
     expect(game.snapshot.value.outcome).toBe(Outcome.WhiteWins)
+    expect(game.snapshot.value.winning).toEqual([0, 1, 2, 3, 4])
     expect(game.placed.value).toEqual({ [Color.White]: 5, [Color.Black]: 4 })
   })
 

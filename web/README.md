@@ -42,7 +42,10 @@ npx playwright show-trace <trace.zip>    # inspect a failure recorded on retry
 ## Layout
 
 - `src/composables/useGame.ts`: owns the game and exposes a snapshot of its state.
+- `src/composables/usePlayers.ts`, `useSound.ts`: player names and the mute switch, both kept in
+  `localStorage`.
 - `src/game/`: board geometry and how the two sides are displayed.
-- `src/components/`: the board, player cards and turn panel.
+- `src/components/`: the board, player cards, turn panel and dialogs.
+- `src/assets/sounds/`: placement, twist and end-of-game sounds.
 - `e2e/`: end-to-end tests; `game.ts` describes the page as a player uses it.
 - `design/`: the mockup the interface follows.

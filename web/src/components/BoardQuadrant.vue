@@ -23,6 +23,8 @@ const props = defineProps<{
   quadrant: Quadrant
   /** The whole board; the quadrant picks its own nine cells. */
   cells: readonly Cell[]
+  /** Indexes in `cells` of the marbles forming a winning line. */
+  winning: readonly number[]
   mode: QuadrantMode
   /** The side to move, previewed in the hole under the pointer. */
   current: Side
@@ -39,14 +41,19 @@ const emit = defineEmits<{
 
 const holes = computed(() =>
   quadrantPositions(props.quadrant).map((position) => {
-    const cell = props.cells[cellIndex(position)] ?? EMPTY
+    const index = cellIndex(position)
+    const cell = props.cells[index] ?? EMPTY
     const side = cell === EMPTY ? null : SIDES[cell]
+    const winning = props.winning.includes(index)
+    const content = side?.name ?? 'empty'
     return {
-      key: cellIndex(position),
+      key: index,
       position,
       side,
+      winning,
+      faded: side !== null && !winning && props.winning.length > 0,
       open: props.mode === 'place' && side === null,
-      label: `Row ${position.row + 1}, column ${position.col + 1}: ${side?.name ?? 'empty'}`,
+      label: `Row ${position.row + 1}, column ${position.col + 1}: ${content}${winning ? ', in the winning line' : ''}`,
     }
   }),
 )
@@ -121,7 +128,7 @@ onBeforeUnmount(() => animation?.cancel())
       :aria-label="hole.label"
       @click="emit('place', hole.position)"
     >
-      <GameMarble v-if="hole.side" :side="hole.side" />
+      <GameMarble v-if="hole.side" :side="hole.side" :winning="hole.winning" :faded="hole.faded" />
     </button>
 
     <button

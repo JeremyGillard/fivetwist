@@ -22,7 +22,7 @@ export class GamePage {
     await expect(this.heading).toBeVisible()
   }
 
-  /** "Bone's turn", "Amber wins", "Draw"... */
+  /** "Bone’s turn", "Amber wins", "Draw"... */
   get heading(): Locator {
     return this.page.locator('.panel__heading')
   }
@@ -31,8 +31,9 @@ export class GamePage {
     return this.page.locator('[aria-current="step"]')
   }
 
+  /** The button in the header; it asks for confirmation when a game is in progress. */
   get newGame(): Locator {
-    return this.page.getByRole('button', { name: 'New game' })
+    return this.page.getByRole('navigation').getByRole('button', { name: 'New game' })
   }
 
   /** Every hole of the board, whatever it holds. Columns and rows start at 1, as on screen. */
@@ -41,7 +42,41 @@ export class GamePage {
   }
 
   get marbles(): Locator {
-    return this.page.getByRole('button', { name: /^Row \d, column \d: (Bone|Amber)$/ })
+    return this.page.getByRole('button', { name: /^Row \d, column \d: (Bone|Amber)/ })
+  }
+
+  /** The marbles marked as forming the winning line. */
+  get winningMarbles(): Locator {
+    return this.page.getByRole('button', { name: /, in the winning line$/ })
+  }
+
+  /** The dialog currently open, if any. */
+  get dialog(): Locator {
+    return this.page.getByRole('dialog')
+  }
+
+  get rules(): Locator {
+    return this.page.getByRole('button', { name: 'Rules', exact: true })
+  }
+
+  get sound(): Locator {
+    return this.page.getByRole('button', { name: 'Sound', exact: true })
+  }
+
+  get playAgain(): Locator {
+    return this.page.getByRole('button', { name: 'Play again' })
+  }
+
+  /** The name on a player card; clicking it turns it into a text field. */
+  playerName(side: Side): Locator {
+    return this.page.getByTitle(`Rename the ${side} player`)
+  }
+
+  async rename(side: Side, name: string) {
+    await this.playerName(side).click()
+    const field = this.page.getByRole('textbox', { name: `Name of the ${side} player` })
+    await field.fill(name)
+    await field.press('Enter')
   }
 
   hole(column: number, row: number, content: Side | 'empty' = 'empty'): Locator {

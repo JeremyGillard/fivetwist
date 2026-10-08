@@ -2,30 +2,46 @@
 import { computed } from 'vue'
 
 import type { Snapshot } from '@/composables/useGame'
-import { SIDES } from '@/game/sides'
 import { Color, Direction, Outcome, Phase } from '@/wasm/pentago.js'
 
 const props = defineProps<{
   snapshot: Snapshot
+  /** The names of the two players. */
+  names: Readonly<Record<Color, string>>
   /** Whether a quadrant is selected and can be twisted now. */
   canTwist: boolean
   /** Why the last action was refused, if it was. */
   error: string | null
 }>()
 
-const emit = defineEmits<{ twist: [direction: Direction] }>()
+const emit = defineEmits<{
+  twist: [direction: Direction]
+  playAgain: []
+}>()
 
 const WINNERS: Partial<Record<Outcome, Color>> = {
   [Outcome.WhiteWins]: Color.White,
   [Outcome.BlackWins]: Color.Black,
 }
 
+const playing = computed(() => props.snapshot.outcome === undefined)
+
 const heading = computed(() => {
   const { outcome, current } = props.snapshot
-  if (outcome === undefined) return `${SIDES[current].name}'s turn`
+  if (outcome === undefined) return `${props.names[current]}’s turn`
 
   const winner = WINNERS[outcome]
-  return winner === undefined ? 'Draw' : `${SIDES[winner].name} wins`
+  return winner === undefined ? 'Draw' : `${props.names[winner]} wins`
+})
+
+/** How the game ended, in a sentence. */
+const ending = computed(() => {
+  const { outcome, winning } = props.snapshot
+  if (outcome === undefined) return ''
+  if (outcome !== Outcome.Draw) return 'Five in a row.'
+  return winning.length > 0
+    ? 'The last twist lined up five for both sides.'
+    : 'The board is full and nobody lined up five.'
 })
 
 /** The two halves of a turn; a step is done, current or still to come. */
@@ -37,8 +53,6 @@ const steps = computed(() => {
   ]
 })
 
-const playing = computed(() => props.snapshot.phase !== Phase.Over)
-
 const hint = computed(() => {
   if (props.snapshot.phase !== Phase.Rotation) return 'Click an empty hole.'
   return 'Pick a quadrant, then choose a direction.'
@@ -46,7 +60,7 @@ const hint = computed(() => {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel" :class="{ 'panel--over': !playing }">
     <h2 class="panel__heading" aria-live="polite">{{ heading }}</h2>
 
     <template v-if="playing">
@@ -95,6 +109,11 @@ const hint = computed(() => {
       <p class="panel__hint">{{ hint }}</p>
     </template>
 
+    <template v-else>
+      <p class="panel__ending">{{ ending }}</p>
+      <button class="panel__again" type="button" @click="emit('playAgain')">Play again</button>
+    </template>
+
     <p v-if="error" class="panel__error" role="alert">{{ error }}</p>
   </section>
 </template>
@@ -107,6 +126,36 @@ const hint = computed(() => {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.panel--over .panel__heading {
+  margin-bottom: 0.5rem;
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--text);
+}
+
+.panel__ending {
+  margin: 0;
+  color: var(--muted);
+}
+
+.panel__again {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.6rem;
+  border: 1.5px solid var(--amber);
+  border-radius: 999px;
+  background: var(--amber);
+  color: #1a1206;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.panel__again:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
 }
 
 .steps {
@@ -218,5 +267,47 @@ const hint = computed(() => {
   margin: 1rem 0 0;
   font-size: 0.85rem;
   color: #ff8f7a;
+}
+
+/* Stacked layout: steps on the left, twist buttons on the right, within thumb reach. */
+@media (max-width: 68rem) {
+  .panel:not(.panel--over) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'heading heading'
+      'steps twist'
+      'hint hint'
+      'error error';
+    align-items: center;
+    column-gap: 1rem;
+  }
+
+  .panel__heading {
+    grid-area: heading;
+    margin-bottom: 0.9rem;
+  }
+
+  .steps {
+    grid-area: steps;
+  }
+
+  .twist {
+    grid-area: twist;
+    margin-top: 0;
+  }
+
+  .panel__hint {
+    grid-area: hint;
+    margin-top: 0.9rem;
+  }
+
+  .panel__error {
+    grid-area: error;
+  }
+
+  .panel--over {
+    text-align: center;
+  }
 }
 </style>

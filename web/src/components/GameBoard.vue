@@ -6,6 +6,8 @@ import type { Quadrant } from '@/wasm/pentago.js'
 
 defineProps<{
   cells: readonly Cell[]
+  /** Indexes in `cells` of the marbles forming a winning line. */
+  winning: readonly number[]
   mode: QuadrantMode
   /** The side to move. */
   current: Side
@@ -27,6 +29,7 @@ const emit = defineEmits<{
       :key="quadrant"
       :quadrant="quadrant"
       :cells="cells"
+      :winning="winning"
       :mode="mode"
       :current="current"
       :selected="selected === quadrant"
@@ -46,6 +49,8 @@ const emit = defineEmits<{
   grid-template-columns: repeat(2, 1fr);
   gap: 2.2%;
   width: min(100%, 36rem);
+  /* Keep the whole board on screen on a short, wide window. */
+  max-width: max(17rem, calc(100dvh - 14rem));
   padding: 2.6%;
   aspect-ratio: 1;
   border-radius: 6%;

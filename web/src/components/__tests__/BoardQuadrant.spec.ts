@@ -10,6 +10,7 @@ function mountQuadrant() {
     props: {
       quadrant: Quadrant.TopLeft,
       cells: Array.from({ length: 36 }, () => 0 as const),
+      winning: [],
       mode: 'idle',
       current: SIDES[Color.White],
       selected: false,

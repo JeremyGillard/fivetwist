@@ -10,6 +10,8 @@ export interface Snapshot {
   current: Color
   phase: Phase
   outcome: Outcome | undefined
+  /** Indexes in `cells` of the marbles forming a winning line; empty unless the game was won. */
+  winning: readonly number[]
 }
 
 function read(game: Game): Snapshot {
@@ -18,6 +20,7 @@ function read(game: Game): Snapshot {
     current: game.current(),
     phase: game.phase(),
     outcome: game.outcome(),
+    winning: Array.from(game.winningCells()),
   }
 }
 
