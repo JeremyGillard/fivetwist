@@ -17,8 +17,10 @@ npm run test:e2e    # builds the app, serves it, and plays it in Chromium, Firef
 npm run build       # builds the WebAssembly package, type-checks, bundles into dist/
 npm run wasm        # only rebuilds the WebAssembly package into src/wasm (gitignored)
 npm run type-check  # needs src/wasm to exist: run `npm run wasm` once first
-npm run lint
-npm run format
+npm run lint          # fixes what it can
+npm run format        # rewrites the files
+npm run check:lint    # reports only, as CI does
+npm run check:format  # reports only, as CI does
 ```
 
 After changing Rust code, restart `npm run dev` or run `npm run wasm`.

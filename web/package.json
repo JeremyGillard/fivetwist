@@ -18,7 +18,9 @@
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/ e2e/"
+    "format": "prettier --write --experimental-cli src/ e2e/",
+    "check:format": "prettier --check src/ e2e/",
+    "check:lint": "oxlint . && eslint ."
   },
   "dependencies": {
     "vue": "^3.5.42"
