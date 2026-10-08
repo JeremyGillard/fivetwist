@@ -1,4 +1,4 @@
-import { Color, Quadrant } from '@/wasm/pentago.js'
+import { Color, Quadrant, type Direction } from '@/wasm/pentago.js'
 
 /** A cell as `Game.cells()` encodes it: 0 when empty, otherwise the color of its marble. */
 export type Cell = 0 | Color
@@ -39,4 +39,24 @@ export function quadrantPositions(quadrant: Quadrant): Position[] {
     }
   }
   return positions
+}
+
+/** The quadrant a position belongs to. */
+export function quadrantOf({ col, row }: Position): Quadrant {
+  if (row < QUADRANT_SIZE) return col < QUADRANT_SIZE ? Quadrant.TopLeft : Quadrant.TopRight
+  return col < QUADRANT_SIZE ? Quadrant.BottomLeft : Quadrant.BottomRight
+}
+
+/** How a quadrant is named to the player. */
+export const QUADRANT_NAMES: Record<Quadrant, string> = {
+  [Quadrant.TopLeft]: 'top-left',
+  [Quadrant.TopRight]: 'top-right',
+  [Quadrant.BottomLeft]: 'bottom-left',
+  [Quadrant.BottomRight]: 'bottom-right',
+}
+
+/** A quadrant being turned: the rules are applied once the animation has finished. */
+export interface Twist {
+  quadrant: Quadrant
+  direction: Direction
 }

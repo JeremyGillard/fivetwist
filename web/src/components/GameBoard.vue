@@ -1,8 +1,23 @@
 <script setup lang="ts">
-import BoardQuadrant from './BoardQuadrant.vue'
-import { QUADRANTS, type Cell } from '@/game/board'
+import BoardQuadrant, { type QuadrantMode } from './BoardQuadrant.vue'
+import { QUADRANTS, type Cell, type Position, type Twist } from '@/game/board'
+import type { Side } from '@/game/sides'
+import type { Quadrant } from '@/wasm/pentago.js'
 
-defineProps<{ cells: readonly Cell[] }>()
+defineProps<{
+  cells: readonly Cell[]
+  mode: QuadrantMode
+  /** The side to move. */
+  current: Side
+  selected: Quadrant | null
+  twist: Twist | null
+}>()
+
+const emit = defineEmits<{
+  place: [position: Position]
+  select: [quadrant: Quadrant]
+  twisted: []
+}>()
 </script>
 
 <template>
@@ -12,6 +27,13 @@ defineProps<{ cells: readonly Cell[] }>()
       :key="quadrant"
       :quadrant="quadrant"
       :cells="cells"
+      :mode="mode"
+      :current="current"
+      :selected="selected === quadrant"
+      :twisting="twist?.quadrant === quadrant ? twist.direction : null"
+      @place="emit('place', $event)"
+      @select="emit('select', quadrant)"
+      @twisted="emit('twisted')"
     />
     <span class="pivot" aria-hidden="true" />
   </div>
@@ -40,5 +62,6 @@ defineProps<{ cells: readonly Cell[] }>()
   border-radius: 50%;
   translate: -50% -50%;
   background: #a9772f;
+  pointer-events: none;
 }
 </style>
