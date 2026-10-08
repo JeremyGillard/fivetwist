@@ -1,0 +1,17 @@
+[package]
+name = "pentago-wasm"
+version = "0.1.0"
+edition = "2024"
+description = "JavaScript bindings for the Pentago rules"
+
+[lib]
+# cdylib: the .wasm file loaded by JavaScript. rlib: lets `cargo test` link the crate natively.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pentago-core = { version = "0.1.0", path = "../pentago-core" }
+wasm-bindgen = "0.2.129"
+
+[dev-dependencies]
+js-sys = "0.3.106"
+wasm-bindgen-test = "0.3.79"

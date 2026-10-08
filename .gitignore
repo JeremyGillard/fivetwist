@@ -1,3 +1,4 @@
 pentago-game/
 target/
 .vscode/
+pkg/
