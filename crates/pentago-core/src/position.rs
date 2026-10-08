@@ -1,4 +1,5 @@
-use crate::BOARD_SIZE;
+use crate::quadrant::Quadrant;
+use crate::{BOARD_SIZE, QUADRANT_SIZE};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
@@ -28,6 +29,16 @@ impl Position {
         let col = self.col.checked_add_signed(dcol)?;
         let row = self.row.checked_add_signed(drow)?;
         Position::new(col, row)
+    }
+
+    /// The quadrant this position belongs to.
+    pub fn quadrant(self) -> Quadrant {
+        match (self.col < QUADRANT_SIZE, self.row < QUADRANT_SIZE) {
+            (true, true) => Quadrant::TopLeft,
+            (false, true) => Quadrant::TopRight,
+            (true, false) => Quadrant::BottomLeft,
+            (false, false) => Quadrant::BottomRight,
+        }
     }
 
     /// Every position on the board, row by row.
@@ -101,6 +112,37 @@ mod tests {
         assert_eq!(all.last(), Position::new(5, 5).as_ref());
         for (i, pos) in all.iter().enumerate() {
             assert!(!all[..i].contains(pos));
+        }
+    }
+
+    #[test]
+    fn quadrant_of_each_corner() {
+        let quadrant = |col, row| Position::new(col, row).unwrap().quadrant();
+        assert_eq!(quadrant(0, 0), Quadrant::TopLeft);
+        assert_eq!(quadrant(5, 0), Quadrant::TopRight);
+        assert_eq!(quadrant(0, 5), Quadrant::BottomLeft);
+        assert_eq!(quadrant(5, 5), Quadrant::BottomRight);
+    }
+
+    #[test]
+    fn quadrant_changes_at_the_middle_of_the_board() {
+        let quadrant = |col, row| Position::new(col, row).unwrap().quadrant();
+        assert_eq!(quadrant(2, 2), Quadrant::TopLeft);
+        assert_eq!(quadrant(3, 2), Quadrant::TopRight);
+        assert_eq!(quadrant(2, 3), Quadrant::BottomLeft);
+        assert_eq!(quadrant(3, 3), Quadrant::BottomRight);
+    }
+
+    #[test]
+    fn every_position_is_in_the_quadrant_that_starts_at_or_before_it() {
+        for position in Position::all() {
+            let origin = position.quadrant().origin();
+            assert!(
+                origin.col() <= position.col() && position.col() < origin.col() + QUADRANT_SIZE
+            );
+            assert!(
+                origin.row() <= position.row() && position.row() < origin.row() + QUADRANT_SIZE
+            );
         }
     }
 }

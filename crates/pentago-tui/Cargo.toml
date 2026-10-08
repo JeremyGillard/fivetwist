@@ -4,3 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+pentago-core = { version = "0.1.0", path = "../pentago-core" }
+ratatui = "0.30.2"
