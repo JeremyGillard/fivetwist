@@ -10,6 +10,13 @@ pub enum Quadrant {
 }
 
 impl Quadrant {
+    pub const ALL: [Quadrant; 4] = [
+        Quadrant::TopLeft,
+        Quadrant::TopRight,
+        Quadrant::BottomLeft,
+        Quadrant::BottomRight,
+    ];
+
     /// Top-left cell of the quadrant on the board.
     pub fn origin(self) -> Position {
         let (col, row) = match self {
@@ -44,5 +51,12 @@ mod tests {
     #[test]
     fn origin_of_bottom_right() {
         assert_eq!(Quadrant::BottomRight.origin(), Position::new(3, 3).unwrap());
+    }
+
+    #[test]
+    fn all_lists_each_quadrant_once() {
+        for (i, quadrant) in Quadrant::ALL.iter().enumerate() {
+            assert!(!Quadrant::ALL[..i].contains(quadrant));
+        }
     }
 }

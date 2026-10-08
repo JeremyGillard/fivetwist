@@ -1,5 +1,6 @@
 use crate::color::Color;
 use crate::direction::Direction;
+use crate::error::CellOccupied;
 use crate::position::Position;
 use crate::quadrant::Quadrant;
 use crate::{BOARD_SIZE, QUADRANT_SIZE, WIN_LENGTH};
@@ -27,14 +28,14 @@ impl Board {
         self.cells[usize::from(pos.row())][usize::from(pos.col())]
     }
 
-    /// Places a marble; returns `false` and leaves the board untouched if the cell is occupied.
-    pub fn place(&mut self, pos: Position, color: Color) -> bool {
+    /// Places a marble, or leaves the board untouched if the cell is occupied.
+    pub fn place(&mut self, pos: Position, color: Color) -> Result<(), CellOccupied> {
         let cell = &mut self.cells[usize::from(pos.row())][usize::from(pos.col())];
         if cell.is_some() {
-            return false;
+            return Err(CellOccupied);
         }
         *cell = Some(color);
-        true
+        Ok(())
     }
 
     pub fn is_full(&self) -> bool {
@@ -42,11 +43,13 @@ impl Board {
     }
 
     /// Whether `color` has at least [`WIN_LENGTH`] marbles in a row, in any direction.
-    pub fn has_five_in_a_row(&self, color: Color) -> bool {
+    ///
+    /// [`WIN_LENGTH`]: crate::WIN_LENGTH
+    pub fn has_winning_line(&self, color: Color) -> bool {
         Position::all().any(|start| STEPS.iter().any(|&step| self.is_line(start, step, color)))
     }
 
-    /// Whether the [`WIN_LENGTH`] cells from `start` along `step` all hold `color`.
+    /// Whether the `WIN_LENGTH` cells from `start` along `step` all hold `color`.
     fn is_line(&self, start: Position, (dcol, drow): (i8, i8), color: Color) -> bool {
         (0..LINE).all(|i| {
             start
@@ -92,22 +95,22 @@ mod tests {
     #[test]
     fn place_then_get_returns_the_color() {
         let mut board = Board::new();
-        assert!(board.place(pos(2, 4), Color::White));
+        assert_eq!(board.place(pos(2, 4), Color::White), Ok(()));
         assert_eq!(board.get(pos(2, 4)), Some(Color::White));
     }
 
     #[test]
     fn place_leaves_other_cells_empty() {
         let mut board = Board::new();
-        board.place(pos(2, 4), Color::White);
+        board.place(pos(2, 4), Color::White).unwrap();
         assert_eq!(board.get(pos(4, 2)), None);
     }
 
     #[test]
     fn place_on_occupied_cell_is_rejected() {
         let mut board = Board::new();
-        board.place(pos(1, 1), Color::White);
-        assert!(!board.place(pos(1, 1), Color::Black));
+        board.place(pos(1, 1), Color::White).unwrap();
+        assert_eq!(board.place(pos(1, 1), Color::Black), Err(CellOccupied));
         assert_eq!(board.get(pos(1, 1)), Some(Color::White));
     }
 
@@ -121,7 +124,7 @@ mod tests {
         let mut board = Board::new();
         for row in 0..BOARD_SIZE {
             for col in 0..BOARD_SIZE {
-                board.place(pos(col, row), Color::Black);
+                board.place(pos(col, row), Color::Black).unwrap();
             }
         }
         assert!(board.is_full());
@@ -133,7 +136,7 @@ mod tests {
         for row in 0..BOARD_SIZE {
             for col in 0..BOARD_SIZE {
                 if (col, row) != (5, 5) {
-                    board.place(pos(col, row), Color::Black);
+                    board.place(pos(col, row), Color::Black).unwrap();
                 }
             }
         }
@@ -143,20 +146,20 @@ mod tests {
     /// A board with a single white marble.
     fn board_with_marble_at(col: u8, row: u8) -> Board {
         let mut board = Board::new();
-        board.place(pos(col, row), Color::White);
+        board.place(pos(col, row), Color::White).unwrap();
         board
     }
 
     /// An asymmetric position touching every quadrant.
     fn scattered_board() -> Board {
         let mut board = Board::new();
-        board.place(pos(0, 0), Color::White);
-        board.place(pos(1, 0), Color::Black);
-        board.place(pos(2, 1), Color::White);
-        board.place(pos(4, 2), Color::Black);
-        board.place(pos(0, 5), Color::White);
-        board.place(pos(3, 3), Color::Black);
-        board.place(pos(5, 4), Color::White);
+        board.place(pos(0, 0), Color::White).unwrap();
+        board.place(pos(1, 0), Color::Black).unwrap();
+        board.place(pos(2, 1), Color::White).unwrap();
+        board.place(pos(4, 2), Color::Black).unwrap();
+        board.place(pos(0, 5), Color::White).unwrap();
+        board.place(pos(3, 3), Color::Black).unwrap();
+        board.place(pos(5, 4), Color::White).unwrap();
         board
     }
 
@@ -209,13 +212,7 @@ mod tests {
 
     #[test]
     fn rotate_then_opposite_restores_the_board() {
-        let quadrants = [
-            Quadrant::TopLeft,
-            Quadrant::TopRight,
-            Quadrant::BottomLeft,
-            Quadrant::BottomRight,
-        ];
-        for quadrant in quadrants {
+        for quadrant in Quadrant::ALL {
             for direction in [Direction::Clockwise, Direction::CounterClockwise] {
                 let mut board = scattered_board();
                 board.rotate(quadrant, direction);
@@ -244,7 +241,7 @@ mod tests {
     fn board_with(color: Color, cells: &[(u8, u8)]) -> Board {
         let mut board = Board::new();
         for &(col, row) in cells {
-            board.place(pos(col, row), color);
+            board.place(pos(col, row), color).unwrap();
         }
         board
     }
@@ -252,64 +249,64 @@ mod tests {
     #[test]
     fn empty_board_has_no_five_in_a_row() {
         let board = Board::new();
-        assert!(!board.has_five_in_a_row(Color::White));
-        assert!(!board.has_five_in_a_row(Color::Black));
+        assert!(!board.has_winning_line(Color::White));
+        assert!(!board.has_winning_line(Color::Black));
     }
 
     #[test]
     fn five_in_a_row_horizontally() {
         let board = board_with(Color::White, &[(0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]);
-        assert!(board.has_five_in_a_row(Color::White));
+        assert!(board.has_winning_line(Color::White));
     }
 
     #[test]
     fn four_in_a_row_is_not_enough() {
         let board = board_with(Color::White, &[(0, 2), (1, 2), (2, 2), (3, 2)]);
-        assert!(!board.has_five_in_a_row(Color::White));
+        assert!(!board.has_winning_line(Color::White));
     }
 
     #[test]
     fn a_line_only_counts_for_its_own_color() {
         let board = board_with(Color::White, &[(0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]);
-        assert!(!board.has_five_in_a_row(Color::Black));
+        assert!(!board.has_winning_line(Color::Black));
     }
 
     #[test]
     fn a_line_broken_by_a_gap_does_not_count() {
         let board = board_with(Color::White, &[(0, 2), (1, 2), (2, 2), (3, 2), (5, 2)]);
-        assert!(!board.has_five_in_a_row(Color::White));
+        assert!(!board.has_winning_line(Color::White));
     }
 
     #[test]
     fn a_line_broken_by_the_opponent_does_not_count() {
         let mut board = board_with(Color::White, &[(0, 2), (1, 2), (3, 2), (4, 2), (5, 2)]);
-        board.place(pos(2, 2), Color::Black);
-        assert!(!board.has_five_in_a_row(Color::White));
-        assert!(!board.has_five_in_a_row(Color::Black));
+        board.place(pos(2, 2), Color::Black).unwrap();
+        assert!(!board.has_winning_line(Color::White));
+        assert!(!board.has_winning_line(Color::Black));
     }
 
     #[test]
     fn five_in_a_row_vertically() {
         let board = board_with(Color::Black, &[(3, 1), (3, 2), (3, 3), (3, 4), (3, 5)]);
-        assert!(board.has_five_in_a_row(Color::Black));
+        assert!(board.has_winning_line(Color::Black));
     }
 
     #[test]
     fn five_in_a_row_on_the_down_right_diagonal() {
         let board = board_with(Color::White, &[(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]);
-        assert!(board.has_five_in_a_row(Color::White));
+        assert!(board.has_winning_line(Color::White));
     }
 
     #[test]
     fn five_in_a_row_on_an_off_centre_diagonal() {
         let board = board_with(Color::White, &[(1, 0), (2, 1), (3, 2), (4, 3), (5, 4)]);
-        assert!(board.has_five_in_a_row(Color::White));
+        assert!(board.has_winning_line(Color::White));
     }
 
     #[test]
     fn five_in_a_row_on_the_up_right_diagonal() {
         let board = board_with(Color::White, &[(0, 5), (1, 4), (2, 3), (3, 2), (4, 1)]);
-        assert!(board.has_five_in_a_row(Color::White));
+        assert!(board.has_winning_line(Color::White));
     }
 
     #[test]
@@ -318,19 +315,19 @@ mod tests {
             Color::White,
             &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)],
         );
-        assert!(board.has_five_in_a_row(Color::White));
+        assert!(board.has_winning_line(Color::White));
     }
 
     #[test]
     fn a_line_does_not_wrap_around_the_edge() {
         let board = board_with(Color::White, &[(4, 0), (5, 0), (0, 1), (1, 1), (2, 1)]);
-        assert!(!board.has_five_in_a_row(Color::White));
+        assert!(!board.has_winning_line(Color::White));
     }
 
     #[test]
     fn five_in_a_row_touching_the_bottom_right_corner() {
         let board = board_with(Color::White, &[(1, 5), (2, 5), (3, 5), (4, 5), (5, 5)]);
-        assert!(board.has_five_in_a_row(Color::White));
+        assert!(board.has_winning_line(Color::White));
     }
 
     #[test]
@@ -344,10 +341,10 @@ mod tests {
             } else {
                 Color::Black
             };
-            board.place(position, color);
+            board.place(position, color).unwrap();
         }
         assert!(board.is_full());
-        assert!(!board.has_five_in_a_row(Color::White));
-        assert!(!board.has_five_in_a_row(Color::Black));
+        assert!(!board.has_winning_line(Color::White));
+        assert!(!board.has_winning_line(Color::Black));
     }
 }
