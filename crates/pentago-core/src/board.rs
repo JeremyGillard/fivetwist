@@ -46,16 +46,28 @@ impl Board {
     ///
     /// [`WIN_LENGTH`]: crate::WIN_LENGTH
     pub fn has_winning_line(&self, color: Color) -> bool {
-        Position::all().any(|start| STEPS.iter().any(|&step| self.is_line(start, step, color)))
+        self.winning_lines(color).next().is_some()
     }
 
-    /// Whether the `WIN_LENGTH` cells from `start` along `step` all hold `color`.
-    fn is_line(&self, start: Position, (dcol, drow): (i8, i8), color: Color) -> bool {
-        (0..LINE).all(|i| {
-            start
-                .offset(dcol * i, drow * i)
-                .is_some_and(|pos| self.get(pos) == Some(color))
-        })
+    /// Every cell that is part of a winning line of `color`, in board order.
+    ///
+    /// Empty if `color` has no winning line. Six in a row gives six cells, and two crossing
+    /// lines give the cells of both.
+    pub fn winning_cells(&self, color: Color) -> Vec<Position> {
+        let lines: Vec<Vec<Position>> = self.winning_lines(color).collect();
+        Position::all()
+            .filter(|position| lines.iter().any(|line| line.contains(position)))
+            .collect()
+    }
+
+    /// Each run of `WIN_LENGTH` cells that all hold `color`.
+    fn winning_lines(&self, color: Color) -> impl Iterator<Item = Vec<Position>> + '_ {
+        Position::all()
+            .flat_map(|start| STEPS.iter().filter_map(move |&step| line_from(start, step)))
+            .filter(move |line| {
+                line.iter()
+                    .all(|&position| self.get(position) == Some(color))
+            })
     }
 
     /// Turns one quadrant by 90 degrees.
@@ -76,6 +88,13 @@ impl Board {
             }
         }
     }
+}
+
+/// The `WIN_LENGTH` cells from `start` along `step`, or `None` if they leave the board.
+fn line_from(start: Position, (dcol, drow): (i8, i8)) -> Option<Vec<Position>> {
+    (0..LINE)
+        .map(|i| start.offset(dcol * i, drow * i))
+        .collect()
 }
 
 #[cfg(test)]
@@ -238,11 +257,15 @@ mod tests {
         assert_ne!(board, scattered_board());
     }
 
-    fn board_with(color: Color, cells: &[(u8, u8)]) -> Board {
-        let mut board = Board::new();
+    fn place_many(board: &mut Board, color: Color, cells: &[(u8, u8)]) {
         for &(col, row) in cells {
             board.place(pos(col, row), color).unwrap();
         }
+    }
+
+    fn board_with(color: Color, cells: &[(u8, u8)]) -> Board {
+        let mut board = Board::new();
+        place_many(&mut board, color, cells);
         board
     }
 
@@ -346,5 +369,68 @@ mod tests {
         assert!(board.is_full());
         assert!(!board.has_winning_line(Color::White));
         assert!(!board.has_winning_line(Color::Black));
+    }
+
+    fn positions(cells: &[(u8, u8)]) -> Vec<Position> {
+        cells.iter().map(|&(col, row)| pos(col, row)).collect()
+    }
+
+    #[test]
+    fn no_winning_cells_without_a_line() {
+        let board = board_with(Color::White, &[(0, 2), (1, 2), (2, 2), (3, 2)]);
+        assert_eq!(board.winning_cells(Color::White), []);
+        assert_eq!(Board::new().winning_cells(Color::White), []);
+    }
+
+    #[test]
+    fn winning_cells_are_the_five_in_a_row() {
+        // The extra marbles around the line are not part of it.
+        let mut board = board_with(Color::White, &[(1, 2), (2, 2), (3, 2), (4, 2), (5, 2)]);
+        place_many(&mut board, Color::White, &[(0, 0), (3, 4)]);
+        place_many(&mut board, Color::Black, &[(0, 2), (3, 3)]);
+
+        assert_eq!(
+            board.winning_cells(Color::White),
+            positions(&[(1, 2), (2, 2), (3, 2), (4, 2), (5, 2)])
+        );
+        assert_eq!(board.winning_cells(Color::Black), []);
+    }
+
+    #[test]
+    fn winning_cells_follow_a_diagonal() {
+        let board = board_with(Color::Black, &[(0, 5), (1, 4), (2, 3), (3, 2), (4, 1)]);
+        // Board order is row by row from the top.
+        assert_eq!(
+            board.winning_cells(Color::Black),
+            positions(&[(4, 1), (3, 2), (2, 3), (1, 4), (0, 5)])
+        );
+    }
+
+    #[test]
+    fn six_in_a_row_gives_six_winning_cells() {
+        let cells = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)];
+        let board = board_with(Color::White, &cells);
+        assert_eq!(board.winning_cells(Color::White), positions(&cells));
+    }
+
+    #[test]
+    fn crossing_lines_give_the_cells_of_both_once() {
+        let mut board = board_with(Color::White, &[(0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]);
+        place_many(&mut board, Color::White, &[(2, 0), (2, 1), (2, 3), (2, 4)]);
+
+        assert_eq!(
+            board.winning_cells(Color::White),
+            positions(&[
+                (2, 0),
+                (2, 1),
+                (0, 2),
+                (1, 2),
+                (2, 2),
+                (3, 2),
+                (4, 2),
+                (2, 3),
+                (2, 4),
+            ])
+        );
     }
 }

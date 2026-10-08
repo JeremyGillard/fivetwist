@@ -13,7 +13,7 @@
 use std::error::Error;
 use std::fmt;
 
-use pentago_core::{Game, MoveError, Position};
+use pentago_core::{BOARD_SIZE, Game, MoveError, Position};
 use wasm_bindgen::prelude::*;
 
 /// Value of an empty cell in [`WasmGame::cells`].
@@ -205,6 +205,17 @@ impl WasmGame {
     pub fn cells(&self) -> Vec<u8> {
         Position::all()
             .map(|position| encode_cell(self.game.board().get(position)))
+            .collect()
+    }
+
+    /// Indexes, in `cells()`, of the marbles that form a winning line. Empty unless the game
+    /// ended with five in a row; after a draw where both colors lined up, both lines are listed.
+    #[wasm_bindgen(js_name = winningCells)]
+    pub fn winning_cells(&self) -> Vec<u8> {
+        self.game
+            .winning_cells()
+            .into_iter()
+            .map(|position| position.row() * BOARD_SIZE + position.col())
             .collect()
     }
 
@@ -436,6 +447,20 @@ mod tests {
             ActionError::from(MoveError::CellOccupied).to_string(),
             MoveError::CellOccupied.to_string()
         );
+    }
+
+    #[test]
+    fn winning_cells_are_indexes_into_cells() {
+        let mut game = WasmGame::new();
+        assert_eq!(game.winning_cells(), []);
+        game.try_place(1, 1).unwrap();
+        assert_eq!(game.winning_cells(), []);
+
+        let game = game_won_by_white();
+        assert_eq!(game.winning_cells(), [0, 1, 2, 3, 4]);
+        for index in game.winning_cells() {
+            assert_eq!(game.cells()[usize::from(index)], Color::White as u8);
+        }
     }
 
     #[test]

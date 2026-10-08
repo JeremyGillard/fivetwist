@@ -51,6 +51,18 @@ impl Game {
         self.phase
     }
 
+    /// The cells of every winning line on the board, in board order.
+    ///
+    /// Empty unless the game ended with five in a row; after a draw where both colors lined
+    /// up, it holds the cells of both.
+    pub fn winning_cells(&self) -> Vec<Position> {
+        let white = self.board.winning_cells(Color::White);
+        let black = self.board.winning_cells(Color::Black);
+        Position::all()
+            .filter(|position| white.contains(position) || black.contains(position))
+            .collect()
+    }
+
     /// Places a marble of the current color.
     ///
     /// Five in a row ends the game at once, without a rotation.
@@ -339,5 +351,59 @@ mod tests {
             .unwrap();
 
         assert_eq!(game.phase(), Phase::Over(Outcome::Win(Color::White)));
+    }
+
+    #[test]
+    fn a_game_in_progress_has_no_winning_cells() {
+        let mut game = Game::new();
+        assert_eq!(game.winning_cells(), []);
+        game.place(pos(1, 1)).unwrap();
+        assert_eq!(game.winning_cells(), []);
+    }
+
+    #[test]
+    fn a_won_game_reports_the_winning_cells() {
+        let mut board = Board::new();
+        place_all(&mut board, Color::White, &[(0, 0), (1, 0), (2, 0), (3, 0)]);
+        place_all(&mut board, Color::Black, &[(0, 5), (1, 5), (2, 5), (0, 4)]);
+        let mut game = Game::from_parts(board, Color::White, Phase::Placement);
+
+        game.place(pos(4, 0)).unwrap();
+
+        let expected: Vec<Position> = (0..5).map(|col| pos(col, 0)).collect();
+        assert_eq!(game.winning_cells(), expected);
+    }
+
+    #[test]
+    fn a_draw_by_double_line_reports_the_cells_of_both_colors() {
+        let mut board = white_one_rotation_from_a_line();
+        place_all(
+            &mut board,
+            Color::Black,
+            &[(1, 0), (1, 1), (1, 2), (3, 1), (4, 1)],
+        );
+        let mut game = Game::from_parts(board, Color::White, Phase::Rotation);
+
+        game.rotate(Quadrant::TopLeft, Direction::Clockwise)
+            .unwrap();
+
+        // White holds the top row, Black the one below, both in columns 0 to 4.
+        let expected: Vec<Position> = (0..2)
+            .flat_map(|row| (0..5).map(move |col| pos(col, row)))
+            .collect();
+        assert_eq!(game.phase(), Phase::Over(Outcome::Draw));
+        assert_eq!(game.winning_cells(), expected);
+    }
+
+    #[test]
+    fn a_draw_by_full_board_has_no_winning_cells() {
+        let board = blocks_board_without(&[(5, 5)]);
+        let mut game = Game::from_parts(board, Color::Black, Phase::Placement);
+        game.place(pos(5, 5)).unwrap();
+        game.rotate(Quadrant::TopLeft, Direction::CounterClockwise)
+            .unwrap();
+
+        assert_eq!(game.phase(), Phase::Over(Outcome::Draw));
+        assert_eq!(game.winning_cells(), []);
     }
 }
