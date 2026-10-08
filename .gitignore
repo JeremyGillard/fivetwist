@@ -2,3 +2,4 @@ pentago-game/
 target/
 .vscode/
 pkg/
+web/src/wasm/

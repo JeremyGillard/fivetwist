@@ -1,0 +1,57 @@
+/* Basalt & Amber: tokens taken from the mockup in web/design. */
+:root {
+  --bg: #0e1418;
+  --surface: #161c20;
+  --line: #2b3338;
+  --well: #090d10;
+  --tile: #2a3236;
+  --tile-edge: #384247;
+  --hole: #14191d;
+  --text: #f1eee8;
+  --muted: #8a9399;
+  --amber: #f2963a;
+  --bone: #ece6d8;
+
+  color-scheme: dark;
+  font-family:
+    'Outfit',
+    'Avenir Next',
+    'Segoe UI',
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  line-height: 1.4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.load-error {
+  margin: 0;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--muted);
+}
