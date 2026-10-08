@@ -38,10 +38,10 @@ describe('usePlayers', () => {
   })
 
   it('ignores stored names it cannot read', () => {
-    localStorage.setItem('pentago.players', '{not json')
+    localStorage.setItem('fivetwist.players', '{not json')
     expect(usePlayers().names[Color.White]).toBe('Bone')
 
-    localStorage.setItem('pentago.players', JSON.stringify({ 1: 42, 2: '' }))
+    localStorage.setItem('fivetwist.players', JSON.stringify({ 1: 42, 2: '' }))
     const { names } = usePlayers()
     expect(names[Color.White]).toBe('Bone')
     expect(names[Color.Black]).toBe('Amber')

@@ -21,6 +21,10 @@ const emit = defineEmits<{ close: [] }>()
       <li>If a twist lines up both sides at the same time, the game is a draw.</li>
       <li>If the board fills up with no five in a row, the game is a draw.</li>
     </ul>
+    <p class="credit">
+      Fivetwist follows the rules of the board game Pentago. It is an unofficial project, not
+      affiliated with or endorsed by the game’s publishers.
+    </p>
     <template #actions>
       <button class="dialog__button dialog__button--primary" type="button" @click="emit('close')">
         Got it
@@ -39,6 +43,12 @@ const emit = defineEmits<{ close: [] }>()
 
 p {
   margin: 0;
+}
+
+.credit {
+  margin-top: 1.25rem;
+  font-size: 0.8rem;
+  opacity: 0.75;
 }
 
 strong {

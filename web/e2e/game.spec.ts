@@ -14,7 +14,7 @@ test.afterEach(() => {
 })
 
 test('loads the rules and shows a new game', async ({ page }) => {
-  await expect(page).toHaveTitle('Pentago')
+  await expect(page).toHaveTitle('Fivetwist')
   await expect(game.heading).toHaveText('Bone’s turn')
   await expect(game.currentStep).toContainText('Place a marble')
   await expect(game.holes).toHaveCount(36)

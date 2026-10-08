@@ -3,7 +3,7 @@ import { reactive, readonly } from 'vue'
 import { SIDES } from '@/game/sides'
 import { Color } from '@/wasm/pentago.js'
 
-const STORAGE_KEY = 'pentago.players'
+const STORAGE_KEY = 'fivetwist.players'
 export const MAX_NAME_LENGTH = 16
 
 type Names = Record<Color, string>

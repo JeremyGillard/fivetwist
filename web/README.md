@@ -1,4 +1,6 @@
-# Pentago web app
+# Fivetwist web app
+
+Fivetwist is an unofficial game based on the board game Pentago.
 
 Vue 3 + Vite + TypeScript front-end. The rules run in WebAssembly, built from `crates/pentago-wasm`.
 

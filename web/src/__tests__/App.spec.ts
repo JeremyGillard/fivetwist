@@ -45,7 +45,7 @@ describe('App', () => {
   it('shows a new game: empty board, Bone to move, first step current', () => {
     const wrapper = mount(App)
 
-    expect(wrapper.find('h1').text()).toBe('Pentago')
+    expect(wrapper.find('h1').text()).toBe('Fivetwist')
     expect(wrapper.findAll('.hole')).toHaveLength(36)
     expect(wrapper.findAll('.hole .marble')).toHaveLength(0)
 

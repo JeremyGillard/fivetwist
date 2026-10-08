@@ -104,7 +104,7 @@ function requestNewGame(event: MouseEvent) {
 <template>
   <div class="page">
     <header class="header">
-      <h1 class="logo">Pentago</h1>
+      <h1 class="logo">Fivetwist</h1>
       <nav class="header__actions" aria-label="Game">
         <button class="pill" type="button" @click="openRules">Rules</button>
         <button
@@ -168,7 +168,10 @@ function requestNewGame(event: MouseEvent) {
       />
     </main>
 
-    <footer class="hint">Five in a row wins — across, down or diagonal.</footer>
+    <footer class="hint">
+      <p>Five in a row wins — across, down or diagonal.</p>
+      <p class="hint__credit">An unofficial game based on the board game Pentago.</p>
+    </footer>
 
     <RulesDialog :open="rulesOpen" @close="rulesOpen = false" />
     <ConfirmDialog
@@ -286,6 +289,16 @@ function requestNewGame(event: MouseEvent) {
   text-align: center;
   font-size: 0.9rem;
   color: var(--muted);
+}
+
+.hint p {
+  margin: 0;
+}
+
+.hint__credit {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
 
 /* Tablets and phones: one column, in the order the eye and the thumb need. */

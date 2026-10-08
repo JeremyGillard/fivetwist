@@ -4,7 +4,7 @@ import endUrl from '@/assets/sounds/end.wav'
 import placeUrl from '@/assets/sounds/place.wav'
 import twistUrl from '@/assets/sounds/twist.wav'
 
-const STORAGE_KEY = 'pentago.muted'
+const STORAGE_KEY = 'fivetwist.muted'
 
 const URLS = { place: placeUrl, twist: twistUrl, end: endUrl } as const
 
