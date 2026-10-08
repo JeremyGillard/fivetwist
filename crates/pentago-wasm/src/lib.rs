@@ -169,14 +169,14 @@ impl From<MoveError> for ActionError {
     }
 }
 
-/// A game of Pentago, owned by JavaScript.
-#[wasm_bindgen]
+/// A game of Pentago, owned by JavaScript, where it is simply called `Game`.
+#[wasm_bindgen(js_name = Game)]
 #[derive(Debug, Default)]
 pub struct WasmGame {
     game: Game,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_class = Game)]
 impl WasmGame {
     /// A new game: empty board, White places first.
     #[wasm_bindgen(constructor)]
