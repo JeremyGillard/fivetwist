@@ -2,6 +2,7 @@
   "name": "fivetwist-web",
   "version": "0.0.0",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "wasm": "wasm-pack build ../crates/pentago-wasm --target web --no-pack --out-dir ../../web/src/wasm --out-name pentago",

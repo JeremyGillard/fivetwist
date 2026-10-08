@@ -2,6 +2,9 @@
 name = "pentago-tui"
 version = "0.1.0"
 edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+description = "Terminal interface for the Pentago rules"
 
 [dependencies]
 pentago-core = { version = "0.1.0", path = "../pentago-core" }

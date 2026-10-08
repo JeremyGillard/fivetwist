@@ -2,5 +2,8 @@
 name = "pentago-core"
 version = "0.1.0"
 edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+description = "Rules of Pentago: board, rotations, win detection and the game state machine"
 
 [dependencies]
